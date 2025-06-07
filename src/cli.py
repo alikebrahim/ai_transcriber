@@ -296,11 +296,11 @@ def show_project_summary(project: ProjectConfig, model_key: str):
 async def run_transcription(project: ProjectConfig):
     """Run the transcription process."""
     try:
-        # Save project configuration
-        config_manager.save_project_config(project)
-        
         # Create transcriber
         transcriber = AudioTranscriber()
+        
+        # Track if any transcription succeeds
+        has_success = False
         
         # Run transcription with progress tracking
         with Progress(
@@ -322,6 +322,11 @@ async def run_transcription(project: ProjectConfig):
                         project.output_dir
                     )
                     
+                    # Save project config only on first success
+                    if not has_success:
+                        config_manager.save_project_config(project)
+                        has_success = True
+                    
                     progress.update(task_id, description=f"✓ Completed {audio_file.name}")
                     console.print(f"[green]✓ {audio_file.name} -> {result['output_file']}[/green]")
                     
@@ -329,9 +334,10 @@ async def run_transcription(project: ProjectConfig):
                     progress.update(task_id, description=f"✗ Failed {audio_file.name}")
                     console.print(f"[red]✗ {audio_file.name}: {e}[/red]")
         
-        # Update recent projects
-        config_manager.config.add_recent_project(project.name)
-        config_manager.save_config()
+        # Only update recent projects if we had at least one success
+        if has_success:
+            config_manager.config.add_recent_project(project.name)
+            config_manager.save_config()
         
         console.print(f"\n[bold green]Transcription completed![/bold green]")
         console.print(f"Results saved to: [blue]{project.output_dir}[/blue]")

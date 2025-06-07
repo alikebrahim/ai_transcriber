@@ -1,4 +1,4 @@
-import google.generativeai as genai
+import google.genai as genai
 from pathlib import Path
 import tempfile
 import os
@@ -17,9 +17,10 @@ class GoogleAIModel(AudioTranscriptionModel):
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
         
         if self.api_key:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel(model_id)
+            self.client = genai.Client(api_key=self.api_key)
+            self.model = self.client.models
         else:
+            self.client = None
             self.model = None
     
     def is_available(self) -> bool:
@@ -44,7 +45,7 @@ class GoogleAIModel(AudioTranscriptionModel):
         
         try:
             # Upload the audio file
-            audio_file = genai.upload_file(str(audio_path))
+            audio_file = self.client.files.upload(file=str(audio_path))
             
             # Get system prompt from configuration
             # First check if custom prompt is provided in model config
@@ -65,7 +66,7 @@ Ensure the transcription is accurate and includes proper punctuation."""
             response = await self._generate_async(prompt, audio_file)
             
             # Clean up uploaded file
-            genai.delete_file(audio_file.name)
+            self.client.files.delete(name=audio_file.name)
             
             return response.text.strip()
             
@@ -79,8 +80,9 @@ Ensure the transcription is accurate and includes proper punctuation."""
             # In a real implementation, you might want to use asyncio.to_thread
             import asyncio
             return await asyncio.to_thread(
-                self.model.generate_content, 
-                [prompt, audio_file]
+                self.client.models.generate_content,
+                model=self.model_id,
+                contents=[prompt, audio_file]
             )
         except Exception as e:
             raise RuntimeError(f"Failed to generate content: {e}")

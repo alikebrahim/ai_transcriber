@@ -87,8 +87,8 @@ system_prompt = """Transcribe this technical/educational audio content with atte
 Special considerations:
 - Pay careful attention to technical terms, acronyms, and specialized vocabulary
 - Preserve exact wording for definitions and explanations
-- Include verbal descriptions of any referenced visuals: "as shown on the slide"
-- Note when spelling is provided: "That's P-Y-T-H-O-N"
+- Include verbal descriptions of any referenced visuals: \"as shown on the slide\"
+- Note when spelling is provided: \"That's P-Y-T-H-O-N\"
 - Maintain accuracy for numbers, formulas, and measurements
 - Format lists and enumerated points clearly
 - Include timestamps for sections if the content is structured
@@ -111,7 +111,7 @@ Deliver the full transcription maintaining professional context."""
 
 [custom]
 # User-defined custom prompt - can be overridden in user configuration
-system_prompt = """Provide a complete and accurate transcription of the audio file."""
+system_prompt = "Provide a complete and accurate transcription of the audio file."
 
 # Prompt selection rules
 [prompt_selection]
@@ -138,3 +138,4 @@ include_non_verbal = true
 # Formatting preferences
 paragraph_break_pause_seconds = 3.0
 speaker_change_notation = "[Speaker {n}]"
+

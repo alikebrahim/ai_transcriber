@@ -75,10 +75,7 @@ class AudioTranscriber:
         if not audio_path.exists():
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
         
-        # Create output directory
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Get model
+        # Get model and validate it's available before creating any directories
         model = self.get_model(model_key)
         
         if not model.is_available():
@@ -97,6 +94,9 @@ class AudioTranscriber:
             # Record end time
             end_time = datetime.datetime.now()
             duration = (end_time - start_time).total_seconds()
+            
+            # Only create output directory after successful transcription
+            output_dir.mkdir(parents=True, exist_ok=True)
             
             # Prepare output filename
             output_filename = f"{audio_path.stem}_transcript.md"
@@ -144,24 +144,7 @@ class AudioTranscriber:
             }
             
         except Exception as e:
-            # Record error
-            end_time = datetime.datetime.now()
-            duration = (end_time - start_time).total_seconds()
-            
-            error_metadata = {
-                "source_file": str(audio_path),
-                "model": model_key,
-                "error": str(e),
-                "timestamp": start_time.isoformat(),
-                "duration": duration,
-                "audio_metadata": audio_metadata
-            }
-            
-            # Save error log
-            error_file = output_dir / f"{audio_path.stem}_error.json"
-            with open(error_file, 'w', encoding='utf-8') as f:
-                json.dump(error_metadata, f, indent=2)
-            
+            # Don't create directories or files on failure - just re-raise the exception
             raise RuntimeError(f"Transcription failed: {e}")
     
     def _get_audio_metadata(self, audio_path: Path) -> Dict[str, Any]:
